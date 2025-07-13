@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ashes Coin - What Remains After Everything Burns</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;700&family=EB+Garamond:wght@400;700&display=swap');
+        
+        :root {
+            --ash-color: rgba(180, 180, 180, 0.7);
+            --text-primary: rgba(230, 230, 230, 0.9);
+            --text-secondary: rgba(200, 200, 200, 0.7);
+            --burn-color: rgba(255, 80, 0, 0.3);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #0a0a0a;
+            color: var(--text-primary);
+            font-family: 'Cormorant Garamond', serif;
+            overflow-x: hidden;
+            cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23aaaaaa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'/><circle cx='12' cy='12' r='4'/></svg>"), auto;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        #ash-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        header {
+            text-align: center;
+            padding: 4rem 0;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 4rem;
+            font-weight: 300;
+            letter-spacing: 0.2rem;
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--ash-color), transparent);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            margin-bottom: 3rem;
+        }
+        
+        .logo {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            filter: grayscale(100%) brightness(1.5);
+            opacity: 0.8;
+            transition: all 0.5s ease;
+        }
+        
+        .logo:hover {
+            filter: grayscale(50%) brightness(1.2);
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        section {
+            margin: 5rem 0;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        
+        section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 400;
+            margin-bottom: 2rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h2:hover {
+            cursor: pointer;
+        }
+        
+        h2.burning::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--burn-color);
+            z-index: -1;
+            animation: flicker 0.3s infinite alternate;
+        }
+        
+        @keyframes flicker {
+            0% { opacity: 0.1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 0.5; }
+        }
+        
+        .coin-list {
+            list-style: none;
+            font-size: 1.5rem;
+            line-height: 2.5;
+            margin-left: 2rem;
+        }
+        
+        .coin-list li {
+            position: relative;
+            transition: all 0.5s ease;
+        }
+        
+        .coin-list li::before {
+            content: '†';
+            position: absolute;
+            left: -2rem;
+            color: var(--ash-color);
+        }
+        
+        .coin-list li.burned {
+            color: var(--ash-color);
+            text-decoration: line-through;
+        }
+        
+        .coin-list li:hover {
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+        
+        .coin-list li:hover::before {
+            color: #ff0000;
+        }
+        
+        .cryptic-message {
+            font-size: 1.8rem;
+            line-height: 1.6;
+            margin: 3rem 0;
+            font-style: italic;
+            color: var(--text-secondary);
+            border-left: 1px solid var(--ash-color);
+            padding-left: 2rem;
+        }
+        
+        .interactive-ash {
+            width: 100%;
+            height: 300px;
+            background-color: rgba(20, 20, 20, 0.5);
+            border: 1px solid rgba(100, 100, 100, 0.2);
+            margin: 3rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ash-particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: var(--ash-color);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        
+        .memecoin-graveyard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 3rem 0;
+        }
+        
+        .memecoin-tombstone {
+            width: 120px;
+            height: 160px;
+            background-color: rgba(30, 30, 30, 0.7);
+            border: 1px solid rgba(100, 100, 100, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .memecoin-tombstone:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(255, 80, 0, 0.1);
+            cursor: pointer;
+        }
+        
+        .memecoin-tombstone img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 1rem;
+            filter: grayscale(100%) brightness(0.7);
+            transition: all 0.3s ease;
+        }
+        
+        .memecoin-tombstone:hover img {
+            filter: grayscale(50%) brightness(1);
+        }
+        
+        .memecoin-tombstone .tombstone-text {
+            font-size: 0.9rem;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+        
+        .memecoin-tombstone .rip {
+            position: absolute;
+            bottom: 10px;
+            font-size: 0.7rem;
+            color: var(--ash-color);
+        }
+        
+        .terminal {
+            background-color: #000;
+            padding: 2rem;
+            border: 1px solid rgba(50, 50, 50, 0.5);
+            font-family: 'Courier New', monospace;
+            margin: 3rem 0;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .terminal-line {
+            color: #00ff00;
+            line-height: 1.5;
+            font-size: 1.1rem;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: terminalAppear 0.5s forwards;
+        }
+        
+        @keyframes terminalAppear {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .terminal-cursor {
+            display: inline-block;
+            width: 10px;
+            height: 18px;
+            background-color: #00ff00;
+            animation: blink 1s infinite;
+            vertical-align: middle;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        
+        .burn-interface {
+            text-align: center;
+            margin: 5rem 0;
+            padding: 3rem 0;
+            border-top: 1px solid rgba(100, 100, 100, 0.3);
+            border-bottom: 1px solid rgba(100, 100, 100, 0.3);
+        }
+        
+        .burn-input {
+            background: transparent;
+            border: 1px solid var(--ash-color);
+            color: var(--text-primary);
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            font-family: 'Cormorant Garamond', serif;
+            width: 100%;
+            max-width: 500px;
+            margin: 2rem 0;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .burn-input:focus {
+            border-color: var(--text-primary);
+        }
+        
+        .burn-button {
+            background: transparent;
+            border: 1px solid var(--ash-color);
+            color: var(--text-primary);
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-family: 'Cormorant Garamond', serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .burn-button:hover {
+            border-color: #ff5500;
+            color: #ff5500;
+        }
+        
+        .burn-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 80, 0, 0.1), transparent);
+            transition: all 0.5s ease;
+        }
+        
+        .burn-button:hover::before {
+            left: 100%;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .ashes-remaining {
+            font-size: 3rem;
+            margin: 5rem 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .ashes-remaining::before, .ashes-remaining::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 30%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--ash-color), transparent);
+        }
+        
+        .ashes-remaining::before {
+            left: 0;
+        }
+        
+        .ashes-remaining::after {
+            right: 0;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+            
+            h2 {
+                font-size: 1.8rem;
+            }
+            
+            .coin-list {
+                font-size: 1.2rem;
+            }
+            
+            .cryptic-message {
+                font-size: 1.4rem;
+            }
+            
+            .logo {
+                margin-top: 100px;
+                width: 100px;
+                height: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="ash-canvas"></canvas>
+    
+    <div class="container">
+        <header>
+            <h1 class="burning">In Memoriam of Ashes Coin</h1>
+            <div class="subtitle">What remains after everything burns</div>
+            <img src="21.png" alt="Ashes Coin Logo" class="logo">
+        </header>
+        
+        <section id="what-was-burnt">
+            <h2 class="burning">What Was Burnt</h2>
+            <ul class="coin-list">
+                <li class="burned">$DOGE - The original, now faded</li>
+                <li class="burned">$SHIB - Burned by its own hype</li>
+                <li class="burned">$PEPE - Turned to dust</li>
+                <li class="burned">$WOJAK - Cried itself to ashes</li>
+                <li class="burned">$FLOKI - Sunk with the ship</li>
+                <li class="burned">$ELON - Crashed on re-entry</li>
+                <li class="burned">$SAITAMA - Overpowered by reality</li>
+                <li class="burned">$KEK - Forgotten by the gods</li>
+                <li class="burned">$TSUKA - Dissolved in the rain</li>
+                <li class="burned">$BONK - Bonk went the ashes</li>
+            </ul>
+            
+            <div class="memecoin-graveyard">
+                <div class="memecoin-tombstone">
+                    <img src="https://cryptologos.cc/logos/dogecoin-doge-logo.png" alt="DOGE">
+                    <div class="tombstone-text">Doge</div>
+                    <div class="rip">2013-2023</div>
+                </div>
+                <div class="memecoin-tombstone">
+                    <img src="https://cryptologos.cc/logos/shiba-inu-shib-logo.png" alt="SHIB">
+                    <div class="tombstone-text">Shiba</div>
+                    <div class="rip">2020-2023</div>
+                </div>
+                <div class="memecoin-tombstone">
+                    <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/24478.png" alt="PEPE">
+                    <div class="tombstone-text">Pepe</div>
+                    <div class="rip">2023-2023</div>
+                </div>
+                <div class="memecoin-tombstone">
+                    <img src="https://s2.coinmarketcap.com/static/img/coins/64x64/23026.png" alt="WOJAK">
+                    <div class="tombstone-text">Wojak</div>
+                    <div class="rip">2023-2023</div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="from-ashes">
+            <h2 class="burning">From Ashes, a Coin</h2>
+            <div class="cryptic-message">
+                <p>In the beginning was the void, and from the void came fire.</p>
+                <p>The fire consumed all that was false, all that was temporary.</p>
+                <p>What remains is neither token nor currency, but something purer.</p>
+                <p>Not a promise of riches, but a testament to endurance.</p>
+                <p>Not a symbol of hype, but a marker of truth.</p>
+                <p>Ashes to ashes, dust to dust.</p>
+            </div>
+        </section>
+        
+        <section id="touch-the-ash">
+            <h2 class="burning">Touch the Ash</h2>
+            <div class="interactive-ash" id="ash-interactive"></div>
+            <div class="cryptic-message">
+                <p>All that you touch turns to ash.</p>
+                <p>All that you love turns to dust.</p>
+                <p>Except for one thing.</p>
+            </div>
+        </section>
+        
+        <div class="ashes-remaining">Ashes Coin</div>
+        
+        <section id="terminal-section">
+            <div class="terminal" id="burn-terminal">
+                <!-- Terminal content will be added via JS -->
+            </div>
+        </section>
+        
+        <section id="burn-interface">
+            <div class="burn-interface">
+                <h2 class="burning">Burn Your Past</h2>
+                <input type="text" class="burn-input" placeholder="Enter a token or memory..." id="burn-input">
+                <button class="burn-button" id="burn-button">Burn It</button>
+            </div>
+        </section>
+        
+        <footer>
+            <p>Ashes Coin - All that remains</p>
+            <p>No promise. No hype. Only truth.</p>
+        </footer>
+    </div>
+    
+    <script>
+        // Ash particle system
+        const canvas = document.getElementById('ash-canvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const ashes = [];
+        const ASH_COUNT = 150;
+        
+        class AshParticle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 3 + 1;
+                this.speedX = Math.random() * 0.5 - 0.25;
+                this.speedY = Math.random() * 0.5 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.1;
+                this.wind = Math.random() * 0.2 - 0.1;
+                this.windChange = Math.random() * 0.02 - 0.01;
+            }
+            
+            update() {
+                this.x += this.speedX + this.wind;
+                this.y += this.speedY;
+                this.wind += this.windChange;
+                
+                if (this.wind > 0.2) this.wind = 0.2;
+                if (this.wind < -0.2) this.wind = -0.2;
+                
+                if (this.y > canvas.height) {
+                    this.y = 0;
+                    this.x = Math.random() * canvas.width;
+                }
+                
+                if (this.x > canvas.width) {
+                    this.x = 0;
+                } else if (this.x < 0) {
+                    this.x = canvas.width;
+                }
+            }
+            
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(180, 180, 180, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+        
+        function initAsh() {
+            for (let i = 0; i < ASH_COUNT; i++) {
+                ashes.push(new AshParticle());
+            }
+        }
+        
+        function animateAsh() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = 0; i < ashes.length; i++) {
+                ashes[i].update();
+                ashes[i].draw();
+            }
+            
+            requestAnimationFrame(animateAsh);
+        }
+        
+        initAsh();
+        animateAsh();
+        
+        // Interactive ash effect
+        const interactiveAsh = document.getElementById('ash-interactive');
+        interactiveAsh.addEventListener('mousemove', (e) => {
+            const rect = interactiveAsh.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            for (let i = 0; i < 5; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'ash-particle';
+                particle.style.left = `${x + Math.random() * 20 - 10}px`;
+                particle.style.top = `${y + Math.random() * 20 - 10}px`;
+                particle.style.opacity = Math.random() * 0.5 + 0.1;
+                interactiveAsh.appendChild(particle);
+                
+                setTimeout(() => {
+                    particle.style.transform = `translate(${Math.random() * 100 - 50}px, ${Math.random() * 100 + 50}px)`;
+                    particle.style.opacity = '0';
+                    setTimeout(() => {
+                        particle.remove();
+                    }, 1000);
+                }, 10);
+            }
+        });
+        
+        // Scroll reveal animation
+        function checkVisibility() {
+            const sections = document.querySelectorAll('section');
+            
+            sections.forEach(section => {
+                const sectionTop = section.getBoundingClientRect().top;
+                const windowHeight = window.innerHeight;
+                
+                if (sectionTop < windowHeight * 0.75) {
+                    section.classList.add('visible');
+                }
+            });
+        }
+        
+        window.addEventListener('scroll', checkVisibility);
+        window.addEventListener('load', checkVisibility);
+        
+        // Terminal animation
+        const terminal = document.getElementById('burn-terminal');
+        const burnLogs = [
+            "[01:02:00] - $DOGBURN - failed at ATH",
+            "[01:02:03] - $RUGRAT - vaporized in 2 hrs",
+            "[01:02:05] - $HYPELORD - smoked by gas fees",
+            "[01:02:10] - $MEMEKING - choked on own supply",
+            "[01:02:15] - $PUMPIT - deflated instantly",
+            "[01:02:20] - $FOMOINU - late to its own party",
+            "[01:02:25] - $SCAMCOIN - lived up to its name",
+            "[01:02:30] - $DEVLEFT - rugged in record time",
+            "[01:02:35] - $TULIP - withered away",
+            "[01:02:40] - $BAGHOLDER - still waiting...",
+            "[01:02:45] - $WAGMI - it didn't",
+            "[01:02:50] - $NGMI - it didn't either",
+            "[01:02:55] - $SER - serious problems",
+            "[01:03:00] - $MOON - crashed on launch",
+            "[??:??:??] - $ASHES - still here."
+        ];
+        
+        function displayTerminalLogs() {
+            let delay = 500;
+            
+            burnLogs.forEach((log, index) => {
+                setTimeout(() => {
+                    const line = document.createElement('div');
+                    line.className = 'terminal-line';
+                    line.textContent = log;
+                    terminal.appendChild(line);
+                    
+                    // Scroll to bottom
+                    terminal.scrollTop = terminal.scrollHeight;
+                    
+                    // Special treatment for last line
+                    if (index === burnLogs.length - 1) {
+                        setTimeout(() => {
+                            const cursor = document.createElement('span');
+                            cursor.className = 'terminal-cursor';
+                            line.appendChild(cursor);
+                        }, 500);
+                    }
+                }, delay);
+                
+                delay += 300 + Math.random() * 200;
+            });
+        }
+        
+        // Burn input functionality
+        const burnInput = document.getElementById('burn-input');
+        const burnButton = document.getElementById('burn-button');
+        
+        burnButton.addEventListener('click', () => {
+            if (burnInput.value.trim() !== '') {
+                const burnedItem = burnInput.value.trim();
+                burnInput.value = '';
+                
+                // Create burning effect
+                const burnEffect = document.createElement('div');
+                burnEffect.textContent = burnedItem;
+                burnEffect.style.position = 'fixed';
+                burnEffect.style.top = `${window.innerHeight / 2}px`;
+                burnEffect.style.left = `${window.innerWidth / 2}px`;
+                burnEffect.style.transform = 'translate(-50%, -50%)';
+                burnEffect.style.fontSize = '2rem';
+                burnEffect.style.color = '#ff5500';
+                burnEffect.style.opacity = '1';
+                burnEffect.style.transition = 'all 1.5s ease';
+                burnEffect.style.zIndex = '1000';
+                burnEffect.style.pointerEvents = 'none';
+                document.body.appendChild(burnEffect);
+                
+                setTimeout(() => {
+                    burnEffect.style.transform = 'translate(-50%, -100px) scale(0.5)';
+                    burnEffect.style.opacity = '0';
+                    
+                    // Create ash particles
+                    for (let i = 0; i < 30; i++) {
+                        const ash = document.createElement('div');
+                        ash.className = 'ash-particle';
+                        ash.style.position = 'fixed';
+                        ash.style.top = `${window.innerHeight / 2}px`;
+                        ash.style.left = `${window.innerWidth / 2}px`;
+                        ash.style.width = `${Math.random() * 5 + 2}px`;
+                        ash.style.height = ash.style.width;
+                        document.body.appendChild(ash);
+                        
+                        setTimeout(() => {
+                            ash.style.transform = `translate(${Math.random() * 200 - 100}px, ${Math.random() * 100 + 50}px)`;
+                            ash.style.opacity = '0';
+                            setTimeout(() => {
+                                ash.remove();
+                            }, 1000);
+                        }, 10);
+                    }
+                    
+                    setTimeout(() => {
+                        burnEffect.remove();
+                    }, 1500);
+                }, 100);
+            }
+        });
+        
+        // Initialize everything when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            displayTerminalLogs();
+            
+            // Make all h2 elements burn on hover
+            const h2Elements = document.querySelectorAll('h2');
+            h2Elements.forEach(h2 => {
+                h2.addEventListener('mouseenter', () => {
+                    h2.classList.add('burning');
+                });
+                
+                h2.addEventListener('mouseleave', () => {
+                    setTimeout(() => {
+                        h2.classList.remove('burning');
+                    }, 1000);
+                });
+            });
+            
+            // Make coin list items burn on click
+            const coinItems = document.querySelectorAll('.coin-list li');
+            coinItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    if (!item.classList.contains('burned')) {
+                        item.classList.add('burned');
+                        
+                        // Create small ash effect
+                        for (let i = 0; i < 10; i++) {
+                            const ash = document.createElement('div');
+                            ash.className = 'ash-particle';
+                            const rect = item.getBoundingClientRect();
+                            ash.style.position = 'fixed';
+                            ash.style.top = `${rect.top + rect.height / 2}px`;
+                            ash.style.left = `${rect.left + rect.width / 2}px`;
+                            document.body.appendChild(ash);
+                            
+                            setTimeout(() => {
+                                ash.style.transform = `translate(${Math.random() * 40 - 20}px, ${Math.random() * 40 + 20}px)`;
+                                ash.style.opacity = '0';
+                                setTimeout(() => {
+                                    ash.remove();
+                                }, 1000);
+                            }, 10);
+                        }
+                    }
+                });
+            });
+            
+            // Make tombstone images burn on hover
+            const tombstones = document.querySelectorAll('.memecoin-tombstone');
+            tombstones.forEach(tombstone => {
+                tombstone.addEventListener('mouseenter', () => {
+                    const ashContainer = document.createElement('div');
+                    ashContainer.style.position = 'absolute';
+                    ashContainer.style.top = '0';
+                    ashContainer.style.left = '0';
+                    ashContainer.style.width = '100%';
+                    ashContainer.style.height = '100%';
+                    ashContainer.style.pointerEvents = 'none';
+                    ashContainer.style.overflow = 'hidden';
+                    tombstone.appendChild(ashContainer);
+                    
+                    for (let i = 0; i < 20; i++) {
+                        const ash = document.createElement('div');
+                        ash.className = 'ash-particle';
+                        ash.style.position = 'absolute';
+                        ash.style.top = '50%';
+                        ash.style.left = '50%';
+                        ashContainer.appendChild(ash);
+                        
+                        setTimeout(() => {
+                            ash.style.transform = `translate(${Math.random() * 60 - 30}px, ${Math.random() * 60 - 30}px)`;
+                            ash.style.opacity = '0';
+                            setTimeout(() => {
+                                ash.remove();
+                            }, 1000);
+                        }, 10);
+                    }
+                    
+                    setTimeout(() => {
+                        ashContainer.remove();
+                    }, 1000);
+                });
+            });
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
